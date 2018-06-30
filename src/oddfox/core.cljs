@@ -1,7 +1,7 @@
 (ns oddfox.core
-  (:require [reagent.core :as reagent]
+  (:require [reagent.core :as r]
+            [reagent-forms.core :as form]
             [re-frame.core :as rf]
-            [re-frisk.core]
             [clojure.string :as str]))
 
 ;; -- Domino 1 - Event Dispatch -----------------------------------------------
@@ -78,8 +78,101 @@
   (fn [db _]
     (:time-color db)))
 
+(rf/reg-sub
+ :time-history
+ (fn [db _]
+   (:time-history db)))
+
+
 
 ;; -- Domino 5 - View Functions ----------------------------------------------
+
+(defn lister [items]
+  [:ul
+   (for [item items]
+     ^{:key item} [:li item])])
+
+(def time-frame-funcs
+  ["on-trigger-thru"
+   "in-look-forward"
+   "within-x-days-of-trigger"
+   "in-trigger-window"
+   "within-x-days"
+   "on-trigger-from"
+   "in-look-back"])
+
+(def filter-funcs
+  ["not-inpatient"
+   "is-discharge-site"
+   "is-trigger"
+   "is-outpatient"
+   "not-trigger-provider"
+   "not-snf"
+   "is-inpatient-acute"
+   "not-discharge-site"
+   "is-trigger-provider"
+   "not-outpatient"
+   "is-professional"
+   "is-inpatient"
+   "not-professional"
+   "is-snf"
+   "not-trigger"])
+
+(def reducer-funcs
+  ["sum-cost"
+   "epi-id"
+   "claim-line-ct"
+   "claim-ct-unique"
+   "min-number"
+   "claim-ct-flag"
+   "min-date"
+   "max-date"
+   "value-counts"
+   "mem-ct-unique"
+   "max-number"
+   "average"])
+
+(def selector-funcs
+  ["select-nth-row"
+   "select-first-row"
+   "select-last-row"
+   "select-nth-claim"
+   "select-rand-row"
+   "select-second-row"
+   "select-head-rows"])
+
+(defn row [label input]
+  [:div.row
+   [:div.column [:label label]]
+   [:div.column input]])
+
+(defn input [label type id]
+  (row label [:input.form-control {:field type :id id}]))
+
+;; (row "Pick Me?"
+;;      [:input {:field :checkbox}])
+
+
+(defn func-list [items]
+  [:div.row {:style {:class "row"}}
+
+   [:div.column
+    {:style {:class "column"}}
+    "Timeframe Functions: "
+    [lister time-frame-funcs]]
+   [:div.column
+    {:style {:class "column"}}
+    "Filter Functions: "
+    [lister filter-funcs]]
+   [:div.column
+    {:style {:class "column"}}
+    "Reducer Functions: "
+    [lister reducer-funcs]]
+   [:div.column
+    {:style {:class "column"}}
+    "Selectors: "
+    [lister selector-funcs]]])
+
 
 (defn clock
   []
@@ -94,7 +187,8 @@
 (defn metric-meta
   []
   [:div.metric-meta
-   (-> @(rf/subscribe [:metricName]))])
+   (-> @(rf/subscribe [:time-history])
+       (str))])
 
 
 (defn color-input
@@ -113,19 +207,25 @@
 (defn ui
   []
   [:div
-   [metric-meta]
+   [box]
    [:h1 "Hello world, it is now"]
    [clock]
    [color-input]])
 
 
-(enable-re-frisk! {:x 100 :y 500})
-(enable-frisk! {:x 100 :y 500})
+(defn metric-ui
+  []
+  [:div
+   [:div.page-header
+    [:h1 "All Operations to Create a Metric"]]
+   [:div.padding]
+   [func-list]])
+
 
 ;; -- Entry Point -------------------------------------------------------------
 
 (defn ^:export run
   []
   (rf/dispatch-sync [:initialize])     ;; puts a value into application state
-  (reagent/render [ui]              ;; mount the application's ui into '<div id="app" />'
+  (r/render [metric-ui]              ;; mount the application's ui into '<div id="app" />'
                   (js/document.getElementById "app")))
