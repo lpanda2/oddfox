@@ -339,4 +339,4 @@ re_frame.trace._STAR_current_trace_STAR_ = new_trace__30809__auto___30902;
 return re_frame.interceptor.invoke_interceptors.call(null,re_frame.interceptor.change_direction.call(null,re_frame.interceptor.invoke_interceptors.call(null,re_frame.interceptor.context.call(null,event_v,interceptors),new cljs.core.Keyword(null,"before","before",-1633692388))),new cljs.core.Keyword(null,"after","after",594996914));
 });
 
-//# sourceMappingURL=interceptor.js.map?rel=1530314312069
+//# sourceMappingURL=interceptor.js.map?rel=1530383436005
