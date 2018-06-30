@@ -1,6 +1,6 @@
 div, h1, input {
-    font-family: HelveticaNeue, Helvetica;
-    color: #777;
+    font-family: Helvetica;
+    color: #000;                /* #777 original grey*/
 }
 
 .row {
@@ -14,7 +14,7 @@ div, h1, input {
 .example-clock {
     font-size: 128px;
     line-height: 1.2em;
-    font-family: HelveticaNeue-UltraLight, Helvetica;
+    font-family: Helvetica;
 }
 
 @media (max-width: 768px) {

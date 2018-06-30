@@ -1,6 +1,8 @@
 (ns oddfox.core
   (:require [reagent.core :as r]
-            [reagent-forms.core :as form]
+            [reagent-forms.core :refer [bind-fields init-field value-of]]
+            ;; [re-com.core :as re-com]
+            [oddfox.data :as dt]
             [re-frame.core :as rf]
             [clojure.string :as str]))
 
@@ -92,54 +94,6 @@
    (for [item items]
      ^{:key item} [:li item])])
 
-(def time-frame-funcs
-  ["on-trigger-thru"
-   "in-look-forward"
-   "within-x-days-of-trigger"
-   "in-trigger-window"
-   "within-x-days"
-   "on-trigger-from"
-   "in-look-back"])
-
-(def filter-funcs
-  ["not-inpatient"
-   "is-discharge-site"
-   "is-trigger"
-   "is-outpatient"
-   "not-trigger-provider"
-   "not-snf"
-   "is-inpatient-acute"
-   "not-discharge-site"
-   "is-trigger-provider"
-   "not-outpatient"
-   "is-professional"
-   "is-inpatient"
-   "not-professional"
-   "is-snf"
-   "not-trigger"])
-
-(def reducer-funcs
-  ["sum-cost"
-   "epi-id"
-   "claim-line-ct"
-   "claim-ct-unique"
-   "min-number"
-   "claim-ct-flag"
-   "min-date"
-   "max-date"
-   "value-counts"
-   "mem-ct-unique"
-   "max-number"
-   "average"])
-
-(def selector-funcs
-  ["select-nth-row"
-   "select-first-row"
-   "select-last-row"
-   "select-nth-claim"
-   "select-rand-row"
-   "select-second-row"
-   "select-head-rows"])
 
 (defn row [label input]
   [:div.row
@@ -149,9 +103,6 @@
 (defn input [label type id]
   (row label [:input.form-control {:field type :id id}]))
 
-;; (row "Pick Me?"
-;;      [:input {:field :checkbox}])
-
 
 (defn func-list [items]
   [:div.row {:style {:class "row"}}
@@ -159,19 +110,19 @@
    [:div.column
     {:style {:class "column"}}
     "Timeframe Functions: "
-    [lister time-frame-funcs]]
+    [lister dt/time-frame-funcs]]
    [:div.column
     {:style {:class "column"}}
     "Filter Functions: "
-    [lister filter-funcs]]
+    [lister dt/filter-funcs]]
    [:div.column
     {:style {:class "column"}}
     "Reducer Functions: "
-    [lister reducer-funcs]]
+    [lister dt/reducer-funcs]]
    [:div.column
     {:style {:class "column"}}
     "Selectors: "
-    [lister selector-funcs]]])
+    [lister dt/selector-funcs]]])
 
 
 (defn clock
@@ -202,24 +153,26 @@
 (defn box
   []
   [:div
-   [:h1 "Testing this"]])
+   [:p "selected"]]
+  [:div.checkbox
+   [:p "test this"]]
+)
 
-(defn ui
-  []
+(defn header []
   [:div
-   [box]
-   [:h1 "Hello world, it is now"]
-   [clock]
-   [color-input]])
-
+   [:h1 "Create your own metric"]])
 
 (defn metric-ui
   []
   [:div
-   [:div.page-header
-    [:h1 "All Operations to Create a Metric"]]
+   [header]
+   [:div
+    [:h2 "All Operations to Create a Metric"]]
    [:div.padding]
-   [func-list]])
+   [func-list]
+   [:div
+    [:h2 "Selection Summary"]]
+   [box]])
 
 
 ;; -- Entry Point -------------------------------------------------------------
