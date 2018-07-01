@@ -1,7 +1,9 @@
 (ns oddfox.core
   (:require [reagent.core :as r]
             [re-com.core :as re-com]
-            [oddfox.data :as dt]
+            [oddfox.views :as views]
+            [oddfox.db :as db]
+            [oddfox.events :as events]
             [re-frame.core :as rf]
             [clojure.string :as str]))
 
@@ -18,42 +20,16 @@
 (defonce do-timer (js/setInterval dispatch-timer-event 1000))
 
 
-;; -- Domino 2 - Event Handlers -----------------------------------------------
+;; (def sample-metric
+;;   {:metricName nil
+;;    :claimRelationship "same-claim"      ; "same-claim", "overlap", "same-claim-line"
+;;    :metricCodes [{:codeType "procedureCode"
+;;                   :codes ["XYZ"]}
+;;                  {:codeType "providerCategory"
+;;                   :codes ["PR" "OP", "IP"]}]
+;;    :filters []
+;;    :reducer []})
 
-(rf/reg-event-db              ;; sets up initial application state
-  :initialize                 ;; usage:  (dispatch [:initialize])
-  (fn [_ _]                   ;; the two parameters are not important here, so use _
-    {:time (js/Date.)         ;; What it returns becomes the new application state
-     :time-color "#f88"}))    ;; so the application state will initially be a map with two keys
-
-
-(rf/reg-event-db
- :initialize
- (fn [_ _]
-   {:metricName "weird test code"
-    :claimRelationship "same-claim"
-    :metricCodes [{:codeType "procedureCode"
-                   :codes ["XYZ"]}
-                  {:codeType "providerCategory"
-                   :codes ["PR" "OP", "IP"]}]
-    :filters []
-    :time (js/Date.)
-    :time-color "#f88"
-    :time-history ["#f88"]}))
-
-
-(rf/reg-event-db                ;; usage:  (dispatch [:time-color-change 34562])
- :time-color-change            ;; dispatched when the user enters new colour into UI text field
- (fn [db [_ new-color-value]]  ;; -db evnt handlr with 2 params: current app state & event (a vector)
-    (assoc db :time-color new-color-value)))   ;; compute and return the new application state
-
-
-(rf/reg-event-db
- :time-color-add
- (fn [db [_ new-color-value]]
-   (doall
-    (assoc db :time-color new-color-value)
-    (assoc db :time-history (conj (:time-history db) new-color-value)))))
 
 
 (rf/reg-event-db                 ;; usage:  (dispatch [:timer a-js-Date])
@@ -88,70 +64,16 @@
 
 ;; -- Domino 5 - View Functions ----------------------------------------------
 
-(defn lister [items]
-  [:ul
-   (for [item items]
-     ^{:key item} [:li item])])
-
-
-;; (defn funcs []
-;;   [re-com/h-box
-;;    :gap "1em"
-;;    :justify :around
-;;    :align :stretch
-;;    :children [
-;;               [:div
-;;                "Timeframe Functions: "
-;;                [lister dt/time-frame-funcs]]
-;;               [:div
-;;                "Filter Functions: "
-;;                [lister dt/filter-funcs]]
-;;               [:div
-;;                "Reducer Functions: "
-;;                [lister dt/reducer-funcs]]
-;;               [:div
-;;                "Selectors: "
-;;                [lister dt/selector-funcs]]]])
-
-
 (defn funcs []
   [re-com/h-box
    :gap "1em"
    :justify :around
    :align :stretch
-   :children [[re-com/selection-list
-               :choices (mapv #(hash-map :id % :label %) dt/time-frame-funcs)
-               :model (set dt/time-frame-funcs)
-               :on-change #(+ 1 1)
-               :width "175px"
-               :hide-border? true
-               :multi-select? true]
-
-              [re-com/selection-list
-               :choices (mapv #(hash-map :id % :label %) dt/filter-funcs)
-               :model (set dt/filter-funcs)
-               :on-change #(+ 1 1)
-               :width "175px"
-               :hide-border? true
-               :multi-select? true]
-
-              [re-com/selection-list
-               :choices (mapv #(hash-map :id % :label %) dt/reducer-funcs)
-               :model (set dt/reducer-funcs)
-               :on-change #(+ 1 1)
-               :width "175px"
-               :hide-border? true
-               :multi-select? true]
-
-              [re-com/selection-list
-               :choices (mapv #(hash-map :id % :label %) dt/selector-funcs)
-               :model (set dt/selector-funcs)
-               :on-change #(+ 1 1)
-               :width "175px"
-               :hide-border? true
-               :multi-select? true]
-
-              ]])
+   :children [
+              [views/timeframes]
+              [views/filters]
+              [views/reducers]
+              [views/selecters]]])
 
 
 
@@ -180,35 +102,37 @@
             :value @(rf/subscribe [:time-color])
             :on-change #(rf/dispatch [:time-color-change (-> % .-target .-value)])}]])  ;; <---
 
-(defn box
+
+(defn bold-title-header [text]
+  [re-com/title
+   :label text
+   :level :level1
+   :style {:font-weight "bold"
+           :margin-left "10px"}
+   :underline? true])
+
+(defn section-header [text]
+  [re-com/title
+   :label text
+   :level :level2
+   :style {:font-weight "bold"
+           :margin-left "10px"
+           :margin-bottom "20px"}])
+
+
+(defn front-page
   []
   [:div
-   [:p "selected"]]
-  [:div.checkbox
-   [:p "test this"]]
-)
-
-(defn header []
-  [:div
-   [:h1 "Create your own metric"]])
-
-(defn metric-ui
-  []
-  [:div
-   [header]
-   [:div
-    [:h2 "All Operations to Create a Metric"]]
-   [:div.padding]
+   (bold-title-header "Metrics Engine")
+   (section-header "All Operations to Create a Metric")
    [funcs]
-   [:div
-    [:h2 "Selection Summary"]]
-   [box]])
+   (section-header "Selection Summary")])
 
 
 ;; -- Entry Point -------------------------------------------------------------
 
 (defn ^:export run
   []
-  (rf/dispatch-sync [:initialize])     ;; puts a value into application state
-  (r/render [metric-ui]              ;; mount the application's ui into '<div id="app" />'
+  (rf/dispatch-sync [::events/initialize])     ;; puts a value into application state
+  (r/render [front-page]              ;; mount the application's ui into '<div id="app" />'
                   (js/document.getElementById "app")))
