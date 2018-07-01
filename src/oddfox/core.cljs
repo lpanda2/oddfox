@@ -1,7 +1,6 @@
 (ns oddfox.core
   (:require [reagent.core :as r]
-            [reagent-forms.core :refer [bind-fields init-field value-of]]
-            ;; [re-com.core :as re-com]
+            [re-com.core :as re-com]
             [oddfox.data :as dt]
             [re-frame.core :as rf]
             [clojure.string :as str]))
@@ -95,34 +94,65 @@
      ^{:key item} [:li item])])
 
 
-(defn row [label input]
-  [:div.row
-   [:div.column [:label label]]
-   [:div.column input]])
+;; (defn funcs []
+;;   [re-com/h-box
+;;    :gap "1em"
+;;    :justify :around
+;;    :align :stretch
+;;    :children [
+;;               [:div
+;;                "Timeframe Functions: "
+;;                [lister dt/time-frame-funcs]]
+;;               [:div
+;;                "Filter Functions: "
+;;                [lister dt/filter-funcs]]
+;;               [:div
+;;                "Reducer Functions: "
+;;                [lister dt/reducer-funcs]]
+;;               [:div
+;;                "Selectors: "
+;;                [lister dt/selector-funcs]]]])
 
-(defn input [label type id]
-  (row label [:input.form-control {:field type :id id}]))
 
+(defn funcs []
+  [re-com/h-box
+   :gap "1em"
+   :justify :around
+   :align :stretch
+   :children [[re-com/selection-list
+               :choices (mapv #(hash-map :id % :label %) dt/time-frame-funcs)
+               :model (set dt/time-frame-funcs)
+               :on-change #(+ 1 1)
+               :width "175px"
+               :hide-border? true
+               :multi-select? true]
 
-(defn func-list [items]
-  [:div.row {:style {:class "row"}}
+              [re-com/selection-list
+               :choices (mapv #(hash-map :id % :label %) dt/filter-funcs)
+               :model (set dt/filter-funcs)
+               :on-change #(+ 1 1)
+               :width "175px"
+               :hide-border? true
+               :multi-select? true]
 
-   [:div.column
-    {:style {:class "column"}}
-    "Timeframe Functions: "
-    [lister dt/time-frame-funcs]]
-   [:div.column
-    {:style {:class "column"}}
-    "Filter Functions: "
-    [lister dt/filter-funcs]]
-   [:div.column
-    {:style {:class "column"}}
-    "Reducer Functions: "
-    [lister dt/reducer-funcs]]
-   [:div.column
-    {:style {:class "column"}}
-    "Selectors: "
-    [lister dt/selector-funcs]]])
+              [re-com/selection-list
+               :choices (mapv #(hash-map :id % :label %) dt/reducer-funcs)
+               :model (set dt/reducer-funcs)
+               :on-change #(+ 1 1)
+               :width "175px"
+               :hide-border? true
+               :multi-select? true]
+
+              [re-com/selection-list
+               :choices (mapv #(hash-map :id % :label %) dt/selector-funcs)
+               :model (set dt/selector-funcs)
+               :on-change #(+ 1 1)
+               :width "175px"
+               :hide-border? true
+               :multi-select? true]
+
+              ]])
+
 
 
 (defn clock
@@ -169,7 +199,7 @@
    [:div
     [:h2 "All Operations to Create a Metric"]]
    [:div.padding]
-   [func-list]
+   [funcs]
    [:div
     [:h2 "Selection Summary"]]
    [box]])
